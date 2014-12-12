@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find sr_moveit_hand_config)/launch/experiments.launch"/>
+
+  <node name="shadow_move_group_test" pkg="moveit_shadow_test" type="shadow_move_group_test" respawn="false" output="screen">
+  </node>
+
+</launch>

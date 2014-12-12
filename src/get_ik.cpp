@@ -61,42 +61,42 @@ const robot_state::JointModelGroup* lf_joint_model_group;
 const robot_state::JointModelGroup* th_joint_model_group;
 
 
+// FIRST FINGER
 /**
 * Joint position callback: j0
 */
-void mf_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+void ff_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
 {
     const double vSet_point= (double) msg->set_point;
-    const std::vector<std::string> &joint_names = mf_joint_model_group->getJointModelNames();
+    const std::vector<std::string> &joint_names = ff_joint_model_group->getJointModelNames();
     sharedKinematic_state->setJointPositions(joint_names[3],&vSet_point);
     sharedKinematic_state->setJointPositions(joint_names[2],&vSet_point);
+
+
     // Mostrar valor joint
     std::vector<double> joint_values;
-    sharedKinematic_state->copyJointGroupPositions(mf_joint_model_group, joint_values);
-    //ROS_INFO("Joint %s: %f", joint_names[3].c_str(), joint_values[3]);
-    //ROS_INFO("Joint %s: %f", joint_names[2].c_str(), joint_values[2]);
+    sharedKinematic_state->copyJointGroupPositions(ff_joint_model_group, joint_values);
     for(std::size_t i = 0; i < joint_names.size(); ++i)
       {
-	ROS_INFO("==========================Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+	ROS_INFO("Joint state - %s: %f", joint_names[i].c_str(), joint_values[i]);
       }
-    ROS_INFO("============================================");
-    
-    
-    
-    const Eigen::Affine3d &end_effector_state = sharedKinematic_state->getGlobalLinkTransform("mftip");
 
-    /* Print end-effector pose. Remember that this is in the model frame */
-    //ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
-    //ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
+    
+    const Eigen::Affine3d &end_effector_state = sharedKinematic_state->getGlobalLinkTransform("fftip");
+
+    // Print end-effector pose. Remember that this is in the model frame 
+    ROS_INFO(" \n End effector state \n");
+    ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation());
+    ROS_INFO_STREAM("Rotation: \n" << end_effector_state.rotation());
 
     // Inverse Kinematics
     // ^^^^^^^^^^^^^^^^^^
-    bool found_ik = sharedKinematic_state->setFromIK(mf_joint_model_group, end_effector_state, 10, 0.1);
+    bool found_ik = sharedKinematic_state->setFromIK(ff_joint_model_group, end_effector_state, 10, 0.1);
 
     // Now, we can print out the IK solution (if found):
     if (found_ik)
     {
-      sharedKinematic_state->copyJointGroupPositions(mf_joint_model_group, joint_values);
+      sharedKinematic_state->copyJointGroupPositions(ff_joint_model_group, joint_values);
       for(std::size_t i=0; i < joint_names.size(); ++i)
       {
 	ROS_INFO("IK para Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
@@ -112,10 +112,11 @@ void mf_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& m
     // We can also get the Jacobian from the :moveit_core:`RobotState`.
     Eigen::Vector3d reference_point_position(0.0,0.0,0.0);
     Eigen::MatrixXd jacobian;
-    sharedKinematic_state->getJacobian(mf_joint_model_group, sharedKinematic_state->getLinkModel(mf_joint_model_group->getLinkModelNames().back()),
+    sharedKinematic_state->getJacobian(ff_joint_model_group, sharedKinematic_state->getLinkModel(ff_joint_model_group->getLinkModelNames().back()),
 				  reference_point_position,
 				  jacobian);
-      ROS_INFO_STREAM("Jacobian: " << jacobian);
+      ROS_INFO_STREAM("Jacobian: \n" << jacobian);
+      
       
 }
 
@@ -123,20 +124,20 @@ void mf_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& m
 /**
 * Joint position callback: j3
 */
-void mf_j3Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+void ff_j3Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
 {
   const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = mf_joint_model_group->getJointModelNames();
+  const std::vector<std::string> &joint_names = ff_joint_model_group->getJointModelNames();
   sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
 }
 
 /**
 * Joint position callback: j4
 */
-void mf_j4Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+void ff_j4Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
 {
   const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = mf_joint_model_group->getJointModelNames();
+  const std::vector<std::string> &joint_names = ff_joint_model_group->getJointModelNames();
   sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
 }
 
@@ -164,30 +165,24 @@ void th_j2Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& m
   const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
   sharedKinematic_state->setJointPositions(joint_names[3],&vSet_point);
   
-  /**
-   * 
   std::vector<double> joint_values;
   sharedKinematic_state->copyJointGroupPositions(th_joint_model_group, joint_values);
-    //ROS_INFO("Joint %s: %f", joint_names[3].c_str(), joint_values[3]);
-    //ROS_INFO("Joint %s: %f", joint_names[2].c_str(), joint_values[2]);
   for(std::size_t i = 0; i < joint_names.size(); ++i)
     {
-	ROS_INFO("==========================Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+	ROS_INFO(" Joint State - %s: %f", joint_names[i].c_str(), joint_values[i]);
     }
-  ROS_INFO("============================================");
     
   const Eigen::Affine3d &end_effector_state = sharedKinematic_state->getGlobalLinkTransform("thtip"); 
   
-  */
 
   /* Print end-effector pose. Remember that this is in the model frame */
-  //ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
-  //ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
+  ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
+  ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
 
   // Inverse Kinematics
   
   // ^^^^^^^^^^^^^^^^^^
-  /**
+
   bool found_ik = sharedKinematic_state->setFromIK(th_joint_model_group, end_effector_state, 10, 0.1);
 
   // Now, we can print out the IK solution (if found):
@@ -202,7 +197,7 @@ void th_j2Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& m
   else
   {
     ROS_INFO("Did not find IK solution");
-  }*/
+  }
 }
 
 
@@ -247,13 +242,13 @@ int main(int argc, char **argv)
 
   
   // Definir callbacks para cada joint publicada
-  /**ros::Subscriber subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, j0Callback);
-  ros::Subscriber subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, j3Callback);
-  ros::Subscriber subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, j4Callback); */
+  ros::Subscriber subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, ff_j0Callback);
+  ros::Subscriber subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, ff_j3Callback);
+  ros::Subscriber subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, ff_j4Callback);
   
-  ros::Subscriber subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, mf_j0Callback);
+  /**ros::Subscriber subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, mf_j0Callback);
   ros::Subscriber subs_Mf_J3 = nh.subscribe("/sh_mfj3_position_controller/state", 1000, mf_j3Callback);
-  ros::Subscriber subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, mf_j4Callback); 
+  ros::Subscriber subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, mf_j4Callback);*/
   
   /**ros::Subscriber subs_Rf_J0 = nh.subscribe("/sh_rfj0_position_controller/state", 1000, j0Callback);
   ros::Subscriber subs_Rf_J3 = nh.subscribe("/sh_rfj3_position_controller/state", 1000, j3Callback);

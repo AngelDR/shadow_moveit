@@ -22,6 +22,8 @@ catkin_package(
     moveit_core
     moveit_ros_planning_interface
     interactive_markers
+    pr2_controller_manager
+    pr2_mechanism_msgs
 )
 find_package(Eigen REQUIRED)
 
@@ -122,8 +124,10 @@ link_directories(${catkin_LIBRARY_DIRS})
 # add_executable(moveit_shadow_test_node src/moveit_shadow_test_node.cpp)
 add_executable(shadow_kinematic_test src/shadow_kinematic_test.cpp)
 add_executable(shadow_get_ik src/get_ik.cpp)
+add_executable(shadow_move_group_test src/move_group_test.cpp)
 target_link_libraries(shadow_kinematic_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_get_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(shadow_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable/library
@@ -172,6 +176,7 @@ target_link_libraries(shadow_get_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 install(TARGETS shadow_kinematic_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_get_ik DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS shadow_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #############
