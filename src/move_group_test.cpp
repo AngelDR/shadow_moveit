@@ -58,6 +58,13 @@ int main(int argc, char **argv)
   ros::ServiceClient load_controller_client = node_handle.serviceClient<pr2_mechanism_msgs::LoadController>("pr2_controller_manager/load_controller");
   ros::ServiceClient switch_controller_client = node_handle.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
   
+  // >> Obtener numero de dedos que se usan en el experimento -> rosparam
+  int num_fingers_exp;
+  if (node_handle.getParam("/experimento/numero_dedos", num_fingers_exp))
+  {
+    ROS_INFO("Numero de dedos para el experimento : %d", num_fingers_exp); 
+  }
+  
   // >> pressure map service
   ros::ServiceClient pressure_client = node_handle.serviceClient<tekscan_client::GetPressureMap>("GetPressureMap");
   tekscan_client::GetPressureMap srv_pressure;
@@ -253,13 +260,62 @@ int main(int argc, char **argv)
   
   
   double wrj1_position = -0.5934;
+  double position_step = 0.05;
+  
+  
+  
+  /**
+   * 
+   * REAJUSTE DE POSICION
+   * 
+   */
+  // >> while presion menor que un umbral de seguridad
+  double min_pressure_threshold = 2.0;
+  do
+  {
+    if (pressure_client.call(srv_pressure))
+    {
+      ROS_INFO("/Reajuste - posición");
+
+	  group_variable_values_ff[1] += position_step;
+	  group_variable_values_ff[2] += position_step; 
+	  group_variable_values_mf[1] += position_step;
+	  group_variable_values_mf[2] += position_step; 
+	  wrj1_position += -0.01;
+	  
+	  pos_ff_j0_pub.publish(group_variable_values_ff[2]);
+	  sleep(0.1);
+	  pos_ff_j3_pub.publish(group_variable_values_ff[1]);
+	  sleep(0.1);
+	  pos_mf_j0_pub.publish(group_variable_values_mf[2]);
+	  sleep(0.1);
+	  pos_mf_j3_pub.publish(group_variable_values_mf[1]);
+	  sleep(0.1);
+	  pos_wr_j1_pub.publish(wrj1_position);
+	  sleep(1.0); 
+      
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+    }
+    
+  }while((srv_pressure.response.applied_force[0] <  min_pressure_threshold) && (srv_pressure.response.applied_force[1] <  min_pressure_threshold));
+	    //&& (srv_pressure.response.applied_force[2] <  min_pressure_threshold));
+  
+  
+  
+  /**
+   * PRIMERA FORMA: pruebas, de forma directa
+   * 
   while( (group_variable_values_ff[1] < 0.85) || (group_variable_values_ff[2] < 1.4))
   {
     
-    group_variable_values_ff[1] += 0.05;
-    group_variable_values_ff[2] += 0.05; 
-    group_variable_values_mf[1] += 0.05;
-    group_variable_values_mf[2] += 0.05; 
+    group_variable_values_ff[1] += position_step;
+    group_variable_values_ff[2] += position_step; 
+    group_variable_values_mf[1] += position_step;
+    group_variable_values_mf[2] += position_step; 
     wrj1_position += -0.005;
     
     pos_ff_j0_pub.publish(group_variable_values_ff[2]);
@@ -275,8 +331,17 @@ int main(int argc, char **argv)
     sleep(1.0); 
   }
   
+  */
+  
   
   sleep(2.0);
+  
+  
+  /**
+   * 
+   * REAJUSTE DE FUERZA
+   * 
+   */
   
   // >> Cambiar a control de fuerza -> para reajuste de fuerza
   pr2_mechanism_msgs::LoadController srv_load;
@@ -302,7 +367,7 @@ int main(int argc, char **argv)
     srv_load.request.name = list_controllers_to_load[i];
     if (load_controller_client.call(srv_load))
     {
-      if(srv_load.response.ok) {ROS_INFO("Effort controller cargado");}
+      if(srv_load.response.ok) {ROS_INFO("Cargados controladores de fuerza");}
     }
     else
     {
@@ -317,10 +382,9 @@ int main(int argc, char **argv)
   srv_switch.request.start_controllers = list_controllers_to_start;
   srv_switch.request.stop_controllers = list_controllers_to_stop;
   srv_switch.request.strictness = 1;
-  ROS_INFO("OK - Request");
   if (switch_controller_client.call(srv_switch))
   {
-    if(srv_switch.response.ok) ROS_INFO("Effort controllers activado");
+    if(srv_switch.response.ok) ROS_INFO("Activados controladores de fuerza");
     else ROS_INFO("NOT OK");
   }
   else
@@ -330,32 +394,80 @@ int main(int argc, char **argv)
   
   
   // Enviar comandos de fuerza  -> Reajuste de fuerza
-  if (pressure_client.call(srv_pressure))
-  {
-    ROS_INFO("/Pressure leida");
-    if(srv_pressure.response.applied_force[1] <  4.00)
+  // >> while presion menor que un umbral de seguridad
+    double max_pressure_threshold = 7.0;
+    int it = 1;
+    // Reajuste first - finger
+    do
     {
-        int it = 0;
-	while(it < 2)
-	{
-	  //eff_ff_j0_pub.publish(400.0);
-	  //sleep(0.1);
-	  eff_ff_j3_pub.publish(400.0);
-	  sleep(0.1);
-	  //eff_mf_j0_pub.publish(400.0);
-	  //sleep(0.1);
-	  eff_mf_j3_pub.publish(400.0);
-	  sleep(0.1);
-	  it++;
-	  sleep(1.5); 
-	}
-    }
+      if (pressure_client.call(srv_pressure))
+      {
+	ROS_INFO("/Reajuste - fuerza - first finger");
+
+	    //eff_ff_j0_pub.publish(400.0);
+	    //sleep(0.1);
+	    if((max_pressure_threshold - srv_pressure.response.applied_force[1] < 5) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
+	      eff_ff_j3_pub.publish(700.0);
+	    else	
+	      break;
+	    it++;
+	    sleep(1.5); 
+	
+      }
+      else
+      {
+	ROS_ERROR("Failed to call service pressure");
+	return 1;
+      }
+      
+    }while((srv_pressure.response.applied_force[1] <  max_pressure_threshold) && (it < 4));
+    
+    
+    // Reajuste thumb - finger
+    it = 1;
+    do
+    {
+      if (pressure_client.call(srv_pressure))
+      {
+	ROS_INFO("/Reajuste - fuerza - thumb");
+
+	    //eff_ff_j0_pub.publish(400.0);
+	    //sleep(0.1);
+	    if((max_pressure_threshold - srv_pressure.response.applied_force[1] < 5) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
+		eff_th_j5_pub.publish(700.0);
+	    else
+		break;
+	    it++;
+	    sleep(1.5); 
+	
+      }
+      else
+      {
+	ROS_ERROR("Failed to call service pressure");
+	return 1;
+      }
+      
+    }while((srv_pressure.response.applied_force[0] <  max_pressure_threshold) && (it < 4));
+    
+    
+    
+  // Desactivar controladores de fuerza. Restablecer controladores de posicion
+     // Switch controllers: parar controladores de posicion y arrancar controladores de fuerza
+
+  srv_switch.request.start_controllers = list_controllers_to_stop;
+  srv_switch.request.stop_controllers = list_controllers_to_start;
+  srv_switch.request.strictness = 1;
+  if (switch_controller_client.call(srv_switch))
+  {
+    if(srv_switch.response.ok) ROS_INFO("Activados controladores de posicion");
+    else ROS_INFO("NOT OK");
   }
   else
   {
-    ROS_ERROR("Failed to call service pressure");
-    return 1;
+    ROS_ERROR("Failed to call service switch Controller");
   }
+    
+    
   
   sleep(1.0);
   ros::shutdown();  
