@@ -52,6 +52,15 @@
 
 using namespace std;
 
+
+class trajectory_state{
+  int pos_j0;
+  int pos_j1;
+  int pos_j2;
+  int force;
+  int centroid;
+};
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "move_group_test");
@@ -280,8 +289,8 @@ int main(int argc, char **argv)
   
   
   double wrj1_position = -0.5934;
-  double position_step = 0.025; // original 0.05
-  double position_step_tip = 0.015; // original 0.03
+  double position_step = 0.05;
+  double position_step_tip = 0.03;
   
   
   
@@ -323,7 +332,7 @@ int main(int argc, char **argv)
 	    //sleep(0.1);
 	  }
 	  pos_wr_j1_pub.publish(wrj1_position);
-	  sleep(0.2); 
+	  sleep(1.0); 
       
     }
     else
@@ -345,6 +354,7 @@ int main(int argc, char **argv)
   }while((srv_pressure.response.applied_force[0] <  min_pressure_threshold) && (srv_pressure.response.applied_force[1] <  min_pressure_threshold));
 	    //&& (srv_pressure.response.applied_force[2] <  min_pressure_threshold));
   
+  myfile.close();
 
   
   
@@ -449,22 +459,8 @@ int main(int argc, char **argv)
 
 	    //eff_ff_j0_pub.publish(400.0);
 	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[1]) < 5.0) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[1] < max_pressure_threshold)
-	    {
+	    if(((max_pressure_threshold - srv_pressure.response.applied_force[1]) < 5.0) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
 	      eff_ff_j3_pub.publish(900.0);
-	      eff_ff_j0_pub.publish(900.0);
-	      
-	      myfile << srv_pressure.response.applied_force[0];
-	      myfile << " ";
-	      myfile << srv_pressure.response.applied_force[1];
-	      myfile << " ";
-	      myfile << srv_pressure.response.applied_force[2];
-	      myfile << " ";
-	      myfile << iteration;
-	      myfile << "\n";
-	      iteration++;
-	    }
 	    else	
 	      break;
 	    it++;
@@ -490,22 +486,8 @@ int main(int argc, char **argv)
 
 	    //eff_ff_j0_pub.publish(400.0);
 	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[0]) < 5.0) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[0] < max_pressure_threshold)
-	    {
-		eff_th_j5_pub.publish(900.0);
-		eff_th_j4_pub.publish(900.0);
-		
-		myfile << srv_pressure.response.applied_force[0];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[1];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[2];
-		myfile << " ";
-		myfile << iteration;
-		myfile << "\n";
-		iteration++;
-	    }
+	    if(((max_pressure_threshold - srv_pressure.response.applied_force[0]) < 5.0) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
+		eff_th_j5_pub.publish(800.0);
 	    else
 		break;
 	    it++;
@@ -519,54 +501,6 @@ int main(int argc, char **argv)
       }
       
     }while((srv_pressure.response.applied_force[0] <  max_pressure_threshold) && (it < 4));
-    
-    
-    
-    
-    
-    // Reajuste middle - finger
-    it = 1;
-    do
-    {
-      if (pressure_client.call(srv_pressure))
-      {
-	ROS_INFO("/Reajuste - fuerza - middle");
-
-	    //eff_ff_j0_pub.publish(400.0);
-	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[0]) < 5.0) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[2] < max_pressure_threshold)
-	    {
-		eff_mf_j0_pub.publish(900.0);
-		eff_mf_j3_pub.publish(900.0);
-		
-		myfile << srv_pressure.response.applied_force[0];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[1];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[2];
-		myfile << " ";
-		myfile << iteration;
-		myfile << "\n";
-		iteration++;
-	    }
-	    else
-		break;
-	    it++;
-	    sleep(0.8); 
-	
-      }
-      else
-      {
-	ROS_ERROR("Failed to call service pressure");
-	return 1;
-      }
-      
-    }while((srv_pressure.response.applied_force[2] <  max_pressure_threshold) && (it < 4));
-    
-    
-   myfile.close();
-
     
     
     

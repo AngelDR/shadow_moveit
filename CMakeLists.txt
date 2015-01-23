@@ -125,9 +125,11 @@ link_directories(${catkin_LIBRARY_DIRS})
 add_executable(shadow_kinematic_test src/shadow_kinematic_test.cpp)
 add_executable(shadow_get_ik src/get_ik.cpp)
 add_executable(shadow_move_group_test src/move_group_test.cpp)
+add_executable(shadow_slip_move_group_test src/slip_move_group_test.cpp)
 target_link_libraries(shadow_kinematic_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_get_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(shadow_slip_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable/library
@@ -177,6 +179,7 @@ target_link_libraries(shadow_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARI
 install(TARGETS shadow_kinematic_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_get_ik DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS shadow_slip_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #############
