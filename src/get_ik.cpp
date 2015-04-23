@@ -54,17 +54,155 @@ robot_model::RobotModelPtr sharedKinematic_model;
 robot_state::RobotStatePtr sharedKinematic_state; 
 
 // joint group
-const robot_state::JointModelGroup* ff_joint_model_group;
+/**const robot_state::JointModelGroup* ff_joint_model_group;
 const robot_state::JointModelGroup* mf_joint_model_group;
 const robot_state::JointModelGroup* rf_joint_model_group;
 const robot_state::JointModelGroup* lf_joint_model_group;
 const robot_state::JointModelGroup* th_joint_model_group;
+*/
 
+const robot_state::JointModelGroup* joint_model;
+std::string* tip_name;
+
+// GENERIC FINGER -> FIRST, MIDDLE AND RING FINGER
+/**
+* Joint position callback: j0  (only for first, middle, ring and little fingers)
+*/
+void _j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+    const double vSet_point= (double) msg->set_point;
+    const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+    sharedKinematic_state->setJointPositions(joint_names[3],&vSet_point);
+    
+    // j0 usado por ff, mf, rf y lf.  * Cambia el modo de obtener los nombres de las articulaciones, porque el numero de las articulaciones son distintos
+    if((*tip_name == "fftip") || (*tip_name == "mftip") || (*tip_name == "rftip"))
+      sharedKinematic_state->setJointPositions(joint_names[2],&vSet_point);
+    else
+      sharedKinematic_state->setJointPositions(joint_names[4],&vSet_point);
+      
+}
+
+
+/**
+* Joint position callback: j1  (only for thumb)
+*/
+void _j1Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+  const double vSet_point= (double) msg->set_point;
+  const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+  sharedKinematic_state->setJointPositions(joint_names[4],&vSet_point);
+}
+
+/**
+* Joint position callback: j2 (only for thumb)
+*/
+void _j2Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+  const double vSet_point= (double) msg->set_point;
+  const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+  sharedKinematic_state->setJointPositions(joint_names[3],&vSet_point);  
+}
+
+
+
+/**
+* Joint position callback: j3  (usado por todos los dedos -> )
+* aquí se implementa la obtención the iK y Jacobian 
+*/
+void _j3Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+  const double vSet_point= (double) msg->set_point;
+  const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+  //sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
+  
+  // j3 usado por th, ff, mf, rf y lf.  * Cambia el modo de obtener los nombres de las articulaciones, porque el numero de las articulaciones son distintos
+  if((*tip_name == "lftip") || (*tip_name == "thtip"))
+    sharedKinematic_state->setJointPositions(joint_names[2],&vSet_point);
+  else
+    sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
+  
+  
+  
+      // Mostrar valor joint
+    std::vector<double> joint_values;
+    sharedKinematic_state->copyJointGroupPositions(joint_model, joint_values);
+    for(std::size_t i = 0; i < joint_names.size(); ++i)
+      {
+	ROS_INFO("Joint state - %s: %f", joint_names[i].c_str(), joint_values[i]);
+      }
+
+    
+    const Eigen::Affine3d &end_effector_state = sharedKinematic_state->getGlobalLinkTransform(*tip_name);
+    
+
+    // Print end-effector pose. Remember that this is in the model frame 
+    ROS_INFO(" \n End effector state \n");
+    ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation());
+    ROS_INFO_STREAM("Rotation: \n" << end_effector_state.rotation());
+
+    // Inverse Kinematics
+    // ^^^^^^^^^^^^^^^^^^
+    bool found_ik = sharedKinematic_state->setFromIK(joint_model, end_effector_state, 10, 0.1);
+
+    // Now, we can print out the IK solution (if found):
+    if (found_ik)
+    {
+      sharedKinematic_state->copyJointGroupPositions(joint_model, joint_values);
+      for(std::size_t i=0; i < joint_names.size(); ++i)
+      {
+	ROS_INFO("IK para Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+      }   
+    }
+    else
+    {
+      ROS_INFO("Did not find IK solution");
+    }
+    
+    // Get the Jacobian
+    // ^^^^^^^^^^^^^^^^
+    // We can also get the Jacobian from the :moveit_core:`RobotState`.
+    Eigen::Vector3d reference_point_position(0.0,0.0,0.0);
+    Eigen::MatrixXd jacobian;
+    sharedKinematic_state->getJacobian(joint_model, sharedKinematic_state->getLinkModel(joint_model->getLinkModelNames().back()),
+				  reference_point_position,
+				  jacobian);
+      ROS_INFO_STREAM("Jacobian: \n" << jacobian);
+}
+
+
+
+/**
+* Joint position callback: j4
+*/
+void _j4Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+  const double vSet_point= (double) msg->set_point;
+  const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+  //sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
+  
+  // j3 usado por th, ff, mf, rf y lf.  * Cambia el modo de obtener los nombres de las articulaciones, porque el numero de las articulaciones son distintos
+  if((*tip_name == "lftip") || (*tip_name == "thtip"))
+    sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
+  else
+    sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
+}
+
+
+/**
+* Joint position callback: j5
+*/
+void _j5Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
+{
+  const double vSet_point= (double) msg->set_point;
+  const std::vector<std::string> &joint_names = joint_model->getJointModelNames();
+  // j5 solo usado por lf, th
+  sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
+}
+
+/**
 
 // FIRST FINGER
-/**
-* Joint position callback: j0
-*/
+
 void ff_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
 {
     const double vSet_point= (double) msg->set_point;
@@ -119,150 +257,92 @@ void ff_j0Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& m
       
       
 }
-
-
-/**
-* Joint position callback: j3
 */
-void ff_j3Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = ff_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
-}
 
-/**
-* Joint position callback: j4
-*/
-void ff_j4Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = ff_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
-}
 
 
 /**
- * ******************      THUMB CALLBACKS   ***********************************************************
- * */
-
-/**
-* Joint position callback: j1
-*/
-void th_j1Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[4],&vSet_point);
-}
-
-/**
-* Joint position callback: j2
-*/
-void th_j2Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[3],&vSet_point);
-  
-  std::vector<double> joint_values;
-  sharedKinematic_state->copyJointGroupPositions(th_joint_model_group, joint_values);
-  for(std::size_t i = 0; i < joint_names.size(); ++i)
-    {
-	ROS_INFO(" Joint State - %s: %f", joint_names[i].c_str(), joint_values[i]);
-    }
-    
-  const Eigen::Affine3d &end_effector_state = sharedKinematic_state->getGlobalLinkTransform("thtip"); 
-  
-
-  /* Print end-effector pose. Remember that this is in the model frame */
-  ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
-  ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
-
-  // Inverse Kinematics
-  
-  // ^^^^^^^^^^^^^^^^^^
-
-  bool found_ik = sharedKinematic_state->setFromIK(th_joint_model_group, end_effector_state, 10, 0.1);
-
-  // Now, we can print out the IK solution (if found):
-  if (found_ik)
-  {
-    sharedKinematic_state->copyJointGroupPositions(th_joint_model_group, joint_values);
-    for(std::size_t i=0; i < joint_names.size(); ++i)
-    {
-      ROS_INFO("IK para Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
-    }   
-  }
-  else
-  {
-    ROS_INFO("Did not find IK solution");
-  }
-}
-
-
-/**
-* Joint position callback: j3
-*/
-void th_j3Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[2],&vSet_point);
-}
-
-/**
-* Joint position callback: j4
-*/
-void th_j4Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[1],&vSet_point);
-}
-
-/**
-* Joint position callback: j5
-*/
-void th_j5Callback(const pr2_controllers_msgs::JointControllerState::ConstPtr& msg)
-{
-  const double vSet_point= (double) msg->set_point;
-  const std::vector<std::string> &joint_names = th_joint_model_group->getJointModelNames();
-  sharedKinematic_state->setJointPositions(joint_names[0],&vSet_point);
-}
-
-
-
-
-
+ * Node main
+ * 
+ */
 int main(int argc, char **argv)
 {
   ros::init (argc, argv, "shadow_get_ik");
   ros::NodeHandle nh;  
+  
+  //  definir subscribers
+  ros::Subscriber subs_Th_J1;
+  ros::Subscriber subs_Th_J2;
+  ros::Subscriber subs_Th_J3;
+  ros::Subscriber subs_Th_J4;
+  ros::Subscriber subs_Th_J5;
+  
+  ros::Subscriber subs_Ff_J0;
+  ros::Subscriber subs_Ff_J3;
+  ros::Subscriber subs_Ff_J4;
+  
+  ros::Subscriber subs_Mf_J0;
+  ros::Subscriber subs_Mf_J3;
+  ros::Subscriber subs_Mf_J4;
+  
+  ros::Subscriber subs_Rf_J0;
+  ros::Subscriber subs_Rf_J3;
+  ros::Subscriber subs_Rf_J4;
+  
+  ros::Subscriber subs_Lf_J0;
+  ros::Subscriber subs_Lf_J3;
+  ros::Subscriber subs_Lf_J4;
+  ros::Subscriber subs_Lf_J5;
+  // >> PARAMETRO DEDO A UTILIZAR
+  // th -> 1; ff -> 2; mf -> 3; rf -> 4; lf ->5;
+  // >> Obtener numero de dedos que se usan en el experimento -> rosparam
+  
+  ROS_INFO("Subscribers iniciados");
+  
+  
+  int finger;
+  nh.getParam("/get_ik/dedo", finger);
+  ROS_INFO("Dedo a usar : %d", finger);
+  tip_name = new std::string;
 
+  ROS_INFO("Dedo a usar: %d", finger);
   
   // Definir callbacks para cada joint publicada
-  ros::Subscriber subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, ff_j0Callback);
-  ros::Subscriber subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, ff_j3Callback);
-  ros::Subscriber subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, ff_j4Callback);
-  
-  /**ros::Subscriber subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, mf_j0Callback);
-  ros::Subscriber subs_Mf_J3 = nh.subscribe("/sh_mfj3_position_controller/state", 1000, mf_j3Callback);
-  ros::Subscriber subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, mf_j4Callback);*/
-  
-  /**ros::Subscriber subs_Rf_J0 = nh.subscribe("/sh_rfj0_position_controller/state", 1000, j0Callback);
-  ros::Subscriber subs_Rf_J3 = nh.subscribe("/sh_rfj3_position_controller/state", 1000, j3Callback);
-  ros::Subscriber subs_Rf_J4 = nh.subscribe("/sh_rfj4_position_controller/state", 1000, j4Callback);
-  
-  ros::Subscriber subs_Lf_J0 = nh.subscribe("/sh_lfj0_position_controller/state", 1000, j0Callback);
-  ros::Subscriber subs_Lf_J3 = nh.subscribe("/sh_lfj3_position_controller/state", 1000, j3Callback);
-  ros::Subscriber subs_Lf_J4 = nh.subscribe("/sh_lfj4_position_controller/state", 1000, j4Callback); */
-  
-  ros::Subscriber subs_Th_J1 = nh.subscribe("/sh_thj1_position_controller/state",1000, th_j1Callback);
-  ros::Subscriber subs_Th_J2 = nh.subscribe("/sh_thj2_position_controller/state",1000, th_j2Callback);
-  ros::Subscriber subs_Th_J3 = nh.subscribe("/sh_thj3_position_controller/state",1000, th_j3Callback);
-  ros::Subscriber subs_Th_J4 = nh.subscribe("/sh_thj4_position_controller/state",1000, th_j4Callback);
-  ros::Subscriber subs_Th_J5 = nh.subscribe("/sh_thj5_position_controller/state",1000, th_j5Callback);
+  switch(finger){
+    case 1:
+        subs_Th_J1 = nh.subscribe("/sh_thj1_position_controller/state",1000, _j1Callback);
+	subs_Th_J2 = nh.subscribe("/sh_thj2_position_controller/state",1000, _j2Callback);
+	subs_Th_J3 = nh.subscribe("/sh_thj3_position_controller/state",1000, _j3Callback);
+	subs_Th_J4 = nh.subscribe("/sh_thj4_position_controller/state",1000, _j4Callback);
+	subs_Th_J5 = nh.subscribe("/sh_thj5_position_controller/state",1000, _j5Callback);
+	break;
+	
+    case 2:
+	subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, _j0Callback);
+	subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, _j3Callback);
+	subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, _j4Callback);
+	break;
+	
+    case 3:  
+	subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, _j0Callback);
+	subs_Mf_J3 = nh.subscribe("/sh_mfj3_position_controller/state", 1000, _j3Callback);
+	subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, _j4Callback);
+	break;
+	  
+    case 4:
+	subs_Rf_J0 = nh.subscribe("/sh_rfj0_position_controller/state", 1000, _j0Callback);
+	subs_Rf_J3 = nh.subscribe("/sh_rfj3_position_controller/state", 1000, _j3Callback);
+	subs_Rf_J4 = nh.subscribe("/sh_rfj4_position_controller/state", 1000, _j4Callback);
+	break;
+	
+    case 5:
+	subs_Lf_J0 = nh.subscribe("/sh_lfj0_position_controller/state", 1000, _j0Callback);
+	subs_Lf_J3 = nh.subscribe("/sh_lfj3_position_controller/state", 1000, _j3Callback);
+	subs_Lf_J4 = nh.subscribe("/sh_lfj4_position_controller/state", 1000, _j4Callback);
+	subs_Lf_J5 = nh.subscribe("/sh_lfj5_position_controller/state", 1000, _j5Callback);
+	break;
+  }
+
   
   
   // Cargar modelo
@@ -278,11 +358,42 @@ int main(int argc, char **argv)
   sharedKinematic_state->setToDefaultValues();
   
   // Definir joint groups
+  /**
   ff_joint_model_group = kinematic_model->getJointModelGroup("first_finger");
   mf_joint_model_group = kinematic_model->getJointModelGroup("middle_finger");
   rf_joint_model_group = kinematic_model->getJointModelGroup("ring_finger");
   lf_joint_model_group = kinematic_model->getJointModelGroup("little_finger");
   th_joint_model_group = kinematic_model->getJointModelGroup("thumb");
+  */
+  
+  
+  // Definir callbacks para cada joint publicada
+  switch(finger){
+    case 1:
+	joint_model = kinematic_model->getJointModelGroup("thumb");
+	*tip_name = "thtip";
+	break;
+	
+    case 2:
+	joint_model = kinematic_model->getJointModelGroup("first_finger");
+	*tip_name = "fftip";
+	break;
+	
+    case 3:  
+	joint_model = kinematic_model->getJointModelGroup("middle_finger");
+	*tip_name = "mftip";
+	break;
+	  
+    case 4:
+	joint_model = kinematic_model->getJointModelGroup("ring_finger");
+	*tip_name = "rftip";
+	break;
+	
+    case 5:
+	joint_model = kinematic_model->getJointModelGroup("little_finger");
+	*tip_name = "lftip";
+	break;
+  }
    
   ros::spin();
   return 0;

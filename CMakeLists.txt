@@ -96,12 +96,12 @@ find_package(Eigen REQUIRED)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+#catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES moveit_shadow_test
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  CATKIN_DEPENDS roscpp rospy std_msgs tf2
 #  DEPENDS system_lib
-)
+#)
 
 ###########
 ## Build ##
@@ -126,11 +126,13 @@ add_executable(shadow_kinematic_test src/shadow_kinematic_test.cpp)
 add_executable(shadow_get_ik src/get_ik.cpp)
 add_executable(shadow_move_group_test src/move_group_test.cpp)
 add_executable(shadow_slip_move_group_test src/slip_move_group_test.cpp)
+#add_executable(shadow_record_test src/record.cpp)
+
 target_link_libraries(shadow_kinematic_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_get_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_slip_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
+#target_link_libraries(shadow_record_test ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -180,6 +182,7 @@ install(TARGETS shadow_kinematic_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATI
 install(TARGETS shadow_get_ik DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_slip_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#install(TARGETS shadow_record_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #############

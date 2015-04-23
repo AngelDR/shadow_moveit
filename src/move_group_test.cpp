@@ -64,16 +64,7 @@ int main(int argc, char **argv)
   // >> pr2_controller_manager -> usado por paquetes Shadow para cargar / arrancar / cambiar controladores
   ros::ServiceClient load_controller_client = node_handle.serviceClient<pr2_mechanism_msgs::LoadController>("pr2_controller_manager/load_controller");
   ros::ServiceClient switch_controller_client = node_handle.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
-  
-  
-  // >> PARAMETROS DE LOS EXPERIMENTOS
-  // >> Obtener numero de dedos que se usan en el experimento -> rosparam
-  int num_fingers_exp;
-  if (node_handle.getParam("/experimento/numero_dedos", num_fingers_exp))
-  {
-    ROS_INFO("Numero de dedos para el experimento : %d", num_fingers_exp); 
-  }
-  
+    
   
   // >> PRESSURE MAP SERVICE
   ros::ServiceClient pressure_client = node_handle.serviceClient<tekscan_client::GetPressureMap>("GetPressureMap");
@@ -89,6 +80,15 @@ int main(int argc, char **argv)
   ros::Publisher pos_mf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_mfj3_position_controller/command", 1000);
   ros::Publisher pos_mf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_mfj4_position_controller/command", 1000);
   
+  ros::Publisher pos_rf_j0_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj0_position_controller/command", 1000);
+  ros::Publisher pos_rf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj3_position_controller/command", 1000);
+  ros::Publisher pos_rf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj4_position_controller/command", 1000);
+  
+  ros::Publisher pos_lf_j0_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj0_position_controller/command", 1000);
+  ros::Publisher pos_lf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj3_position_controller/command", 1000);
+  ros::Publisher pos_lf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj4_position_controller/command", 1000);
+  ros::Publisher pos_lf_j5_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj5_position_controller/command", 1000);
+
   ros::Publisher pos_th_j1_pub = node_handle.advertise<std_msgs::Float64>("/sh_thj1_position_controller/command", 1000);
   ros::Publisher pos_th_j2_pub = node_handle.advertise<std_msgs::Float64>("/sh_thj2_position_controller/command", 1000);
   ros::Publisher pos_th_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_thj3_position_controller/command", 1000);
@@ -107,6 +107,15 @@ int main(int argc, char **argv)
   ros::Publisher eff_mf_j0_pub = node_handle.advertise<std_msgs::Float64>("/sh_mfj0_effort_controller/command", 1000);
   ros::Publisher eff_mf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_mfj3_effort_controller/command", 1000);
   ros::Publisher eff_mf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_mfj4_effort_controller/command", 1000);
+  
+  ros::Publisher eff_rf_j0_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj0_effort_controller/command", 1000);
+  ros::Publisher eff_rf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj3_effort_controller/command", 1000);
+  ros::Publisher eff_rf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_rfj4_effort_controller/command", 1000);
+  
+  ros::Publisher eff_lf_j0_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj0_effort_controller/command", 1000);
+  ros::Publisher eff_lf_j3_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj3_effort_controller/command", 1000);
+  ros::Publisher eff_lf_j4_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj4_effort_controller/command", 1000);
+  ros::Publisher eff_lf_j5_pub = node_handle.advertise<std_msgs::Float64>("/sh_lfj5_effort_controller/command", 1000);
   
   ros::Publisher eff_th_j1_pub = node_handle.advertise<std_msgs::Float64>("/sh_thj1_effort_controller/command", 1000);
   ros::Publisher eff_th_j2_pub = node_handle.advertise<std_msgs::Float64>("/sh_thj2_effort_controller/command", 1000);
@@ -127,6 +136,8 @@ int main(int argc, char **argv)
   moveit::planning_interface::MoveGroup::Plan my_plan;
   moveit::planning_interface::MoveGroup group_first_finger("first_finger");
   moveit::planning_interface::MoveGroup group_middle_finger("middle_finger");
+  moveit::planning_interface::MoveGroup group_ring_finger("ring_finger");
+  moveit::planning_interface::MoveGroup group_little_finger("little_finger");
   moveit::planning_interface::MoveGroup group_thumb("thumb");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;  
   ros::Publisher display_publisher = node_handle.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
@@ -148,7 +159,21 @@ int main(int argc, char **argv)
   
   */
   
+  /**
+   * PRUEBA BUCLE
+   * */
+  //bool exit_ = false; 
   
+  do{
+  
+    
+  // >> PARAMETROS DE LOS EXPERIMENTOS
+  // >> Obtener numero de dedos que se usan en el experimento -> rosparam
+  int num_fingers_exp;
+  if (node_handle.getParam("/experimento/numero_dedos", num_fingers_exp))
+  {
+    ROS_INFO("Numero de dedos para el experimento : %d", num_fingers_exp); 
+  }
 
   
   // >> IR A POSICION INICIAL CON POSICIONES ARTICULARES 
@@ -188,13 +213,13 @@ int main(int argc, char **argv)
   //group_first_finger.move();
   //ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
   /* Sleep to give Rviz time to visualize the plan. */
-  sleep(1.0);
+  //sleep(1.0);
   group_first_finger.getCurrentState()->copyJointGroupPositions(group_first_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_first_finger.getName()), group_variable_values_ff);
   for(std::size_t i = 0; i < group_variable_values_ff.size(); ++i)
   {
     ROS_INFO("Joint %d: %f", i, group_variable_values_ff[i]);
   }
-  sleep(2.0);
+  sleep(0.5);
   
   
 
@@ -228,16 +253,103 @@ int main(int argc, char **argv)
       //group_first_finger.move();
       //ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
       /* Sleep to give Rviz time to visualize the plan. */
-      sleep(1.0);
+      //sleep(1.0);
       group_middle_finger.getCurrentState()->copyJointGroupPositions(group_middle_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_middle_finger.getName()), group_variable_values_mf);
       for(std::size_t i = 0; i < group_variable_values_mf.size(); ++i)
       {
 	ROS_INFO("Joint %d: %f", i, group_variable_values_mf[i]);
       }
-      sleep(2.0);
+      sleep(0.5);
   
   }
   
+  
+  
+  // >> SITUAR RING-FINGER (se actualiza tambien el ModelGroup de MoveIt)
+  std::vector<double> group_variable_values_rf;
+  group_ring_finger.getCurrentState()->copyJointGroupPositions(group_ring_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_ring_finger.getName()), group_variable_values_rf);
+  for(std::size_t i = 0; i < group_variable_values_rf.size(); ++i)
+  {
+    ROS_INFO("Joint %d: %f", i, group_variable_values_rf[i]);
+  }
+  
+  // situar solo si el experimento usa más de tres dedos
+  if(num_fingers_exp > 3)
+  {
+      group_variable_values_rf[0] = -0.052;
+      group_variable_values_rf[1] = 0.000;
+      group_variable_values_rf[2] = 0.575;  
+      group_variable_values_rf[3] = 0.575;
+      
+      pos_rf_j4_pub.publish(group_variable_values_rf[0]);
+      sleep(0.1);
+      pos_rf_j3_pub.publish(group_variable_values_rf[1]);
+      sleep(0.1);
+      pos_rf_j0_pub.publish(group_variable_values_rf[2]);
+      sleep(0.1);
+
+      group_ring_finger.setJointValueTarget(group_variable_values_rf);
+      //success = group_first_finger.plan(my_plan);
+      //success = group_first_finger.execute(my_plan);
+      // group_first_finger.move()  = plan & execute
+      //group_first_finger.move();
+      //ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
+      /* Sleep to give Rviz time to visualize the plan. */
+      //sleep(1.0);
+      group_ring_finger.getCurrentState()->copyJointGroupPositions(group_ring_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_ring_finger.getName()), group_variable_values_rf);
+      for(std::size_t i = 0; i < group_variable_values_rf.size(); ++i)
+      {
+	ROS_INFO("Joint %d: %f", i, group_variable_values_rf[i]);
+      }
+      sleep(0.5);
+  
+  }
+  
+  
+  
+  // >> SITUAR LITTLE-FINGER (se actualiza tambien el ModelGroup de MoveIt)
+  std::vector<double> group_variable_values_lf;
+  group_little_finger.getCurrentState()->copyJointGroupPositions(group_little_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_little_finger.getName()), group_variable_values_lf);
+  for(std::size_t i = 0; i < group_variable_values_lf.size(); ++i)
+  {
+    ROS_INFO("Joint %d: %f", i, group_variable_values_lf[i]);
+  }
+  
+  // situar solo si el experimento usa más de cuatro dedos
+  if(num_fingers_exp > 4)
+  {
+      group_variable_values_lf[0] = 0.104;
+      group_variable_values_lf[1] = -0.052;
+      group_variable_values_lf[2] = 0.000;
+      group_variable_values_lf[3] = 0.453;  
+      group_variable_values_lf[4] = 0.453;
+      
+      pos_lf_j5_pub.publish(group_variable_values_lf[0]);
+      sleep(0.1);
+      pos_lf_j4_pub.publish(group_variable_values_lf[1]);
+      sleep(0.1);
+      pos_lf_j3_pub.publish(group_variable_values_lf[2]);
+      sleep(0.1);
+      pos_lf_j0_pub.publish(group_variable_values_lf[3]);
+      sleep(0.1);
+
+      group_little_finger.setJointValueTarget(group_variable_values_lf);
+      //success = group_first_finger.plan(my_plan);
+      //success = group_first_finger.execute(my_plan);
+      // group_first_finger.move()  = plan & execute
+      //group_first_finger.move();
+      //ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
+      /* Sleep to give Rviz time to visualize the plan. */
+      //sleep(1.0);
+      group_little_finger.getCurrentState()->copyJointGroupPositions(group_little_finger.getCurrentState()->getRobotModel()->getJointModelGroup(group_little_finger.getName()), group_variable_values_lf);
+      for(std::size_t i = 0; i < group_variable_values_lf.size(); ++i)
+      {
+	ROS_INFO("Joint %d: %f", i, group_variable_values_lf[i]);
+      }
+      sleep(0.5);
+  
+  }
+   
   
   // >> SITUAR THUMB
   std::vector<double> group_variable_values_thumb;
@@ -250,6 +362,9 @@ int main(int argc, char **argv)
   group_variable_values_thumb[2] = 0.157;
   group_variable_values_thumb[3] = -0.698;
   group_variable_values_thumb[4] = 0.261;
+  
+  if(num_fingers_exp==4)
+    group_variable_values_thumb[0] = 1.047;
   
   pos_th_j5_pub.publish(group_variable_values_thumb[0]);
   sleep(0.1);
@@ -266,7 +381,7 @@ int main(int argc, char **argv)
   //success = group_thumb.execute(my_plan);
   //ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED"); 
   // Sleep to give Rviz time to visualize the plan.
-  sleep(2.0);
+  sleep(0.5);
   
   
   
@@ -280,8 +395,10 @@ int main(int argc, char **argv)
   
   
   double wrj1_position = -0.5934;
-  double position_step = 0.025; // original 0.05
-  double position_step_tip = 0.015; // original 0.03
+  double position_step = 0.025; // paso a paso 0.025; // original 0.045 
+  double position_step_tip = 0.015;// 0.01;// suave 0.006; //paso a paso 0.015; // original 0.035
+  double position_step_lf = 0.02; // paso a paso 0.02   // original 0.045
+  double position_step_tip_lf = 0.01;// 0.01;// suave 0.006; // paso a paso 0.01   // original 0.03
   
   
   
@@ -291,7 +408,7 @@ int main(int argc, char **argv)
    * 
    */
   // >> while presion menor que un umbral de seguridad
-  double min_pressure_threshold = 2.2;
+  double min_pressure_threshold = 2.0;//0.3;//2.2;
   ofstream myfile;
   myfile.open ("/home/aurova/Desktop/pruebas/resultados/pressure_data.txt");
   if(myfile.is_open())
@@ -304,12 +421,22 @@ int main(int argc, char **argv)
     if (pressure_client.call(srv_pressure))
     {
       ROS_INFO("/Reajuste - posición");
+      
+      
+          // Llamar a servicio de vision -> 
+	  // obtener posicions actuales
+	  // if altura_bbox_actual > altura_bbox_previa
+	      // if posiciones_dedos < altura_bbox_actual
 
 	  group_variable_values_ff[1] += position_step;
 	  group_variable_values_ff[2] += position_step_tip; 
 	  group_variable_values_mf[1] += position_step;
 	  group_variable_values_mf[2] += position_step_tip; 
-	  wrj1_position += -0.01;
+	  group_variable_values_rf[1] += position_step;
+	  group_variable_values_rf[2] += position_step_tip;
+	  group_variable_values_lf[2] += position_step_lf;
+	  group_variable_values_lf[3] += position_step_tip_lf;
+	  wrj1_position += -0.008;//experimento -0.002;  // original -0.01
 	  
 	  pos_ff_j0_pub.publish(group_variable_values_ff[2]);
 	  //sleep(0.1);
@@ -322,9 +449,24 @@ int main(int argc, char **argv)
 	    pos_mf_j3_pub.publish(group_variable_values_mf[1]);
 	    //sleep(0.1);
 	  }
+	  
+	  if (num_fingers_exp > 3)
+	  {
+	    pos_rf_j0_pub.publish(group_variable_values_rf[2]);
+	    //sleep(0.1);
+	    pos_rf_j3_pub.publish(group_variable_values_rf[1]);
+	    //sleep(0.1);
+	  }
+	  
+	  if (num_fingers_exp > 4)
+	  {
+	    pos_lf_j0_pub.publish(group_variable_values_lf[3]);
+	    //sleep(0.1);
+	    pos_lf_j3_pub.publish(group_variable_values_lf[2]);
+	    //sleep(0.1);
+	  }
 	  pos_wr_j1_pub.publish(wrj1_position);
 	  sleep(0.2); 
-      
     }
     else
     {
@@ -338,46 +480,20 @@ int main(int argc, char **argv)
     myfile << " ";
     myfile << srv_pressure.response.applied_force[2];
     myfile << " ";
+    myfile << srv_pressure.response.applied_force[3];
+    myfile << " ";
+    myfile << srv_pressure.response.applied_force[4];
+    myfile << " ";
     myfile << iteration;
     myfile << "\n";
     iteration++;
     
-  }while((srv_pressure.response.applied_force[0] <  min_pressure_threshold) && (srv_pressure.response.applied_force[1] <  min_pressure_threshold));
-	    //&& (srv_pressure.response.applied_force[2] <  min_pressure_threshold));
+  }while((srv_pressure.response.applied_force[0] <  min_pressure_threshold) && (srv_pressure.response.applied_force[1] <  min_pressure_threshold)
+	    && (srv_pressure.response.applied_force[2] <  min_pressure_threshold));
   
 
   
-  
-  
-  /**
-   * PRIMERA FORMA: pruebas, de forma directa
-   * 
-  while( (group_variable_values_ff[1] < 0.85) || (group_variable_values_ff[2] < 1.4))
-  {
-    
-    group_variable_values_ff[1] += position_step;
-    group_variable_values_ff[2] += position_step; 
-    group_variable_values_mf[1] += position_step;
-    group_variable_values_mf[2] += position_step; 
-    wrj1_position += -0.005;
-    
-    pos_ff_j0_pub.publish(group_variable_values_ff[2]);
-    sleep(0.1);
-    pos_ff_j3_pub.publish(group_variable_values_ff[1]);
-    sleep(0.1);
-    pos_mf_j0_pub.publish(group_variable_values_mf[2]);
-    sleep(0.1);
-    pos_mf_j3_pub.publish(group_variable_values_mf[1]);
-    sleep(0.1);
-    pos_wr_j1_pub.publish(wrj1_position);
-
-    sleep(1.0); 
-  }
-  
-  */
-  
-  
-  sleep(2.0);
+  sleep(0.4);
   
   
   /**
@@ -392,14 +508,16 @@ int main(int argc, char **argv)
   
   
   // Cargar controladores effort
-  std::string list_controllers_to_load[6] = {"sh_ffj0_effort_controller","sh_ffj3_effort_controller","sh_thj1_effort_controller","sh_thj2_effort_controller", 
-    "sh_mfj0_effort_controller","sh_mfj3_effort_controller" };
+  std::string list_controllers_to_load[8] = {"sh_ffj0_effort_controller","sh_ffj3_effort_controller","sh_thj1_effort_controller","sh_thj2_effort_controller", 
+    "sh_mfj0_effort_controller","sh_mfj3_effort_controller","sh_rfj0_effort_controller","sh_rfj3_effort_controller" };
   std::vector<std::string> list_controllers_to_start;
   std::vector<std::string> list_controllers_to_stop;
   list_controllers_to_stop.push_back("sh_ffj0_position_controller");
   list_controllers_to_stop.push_back("sh_ffj3_position_controller");
   list_controllers_to_stop.push_back("sh_mfj0_position_controller");
   list_controllers_to_stop.push_back("sh_mfj3_position_controller");
+  list_controllers_to_stop.push_back("sh_rfj0_position_controller");
+  list_controllers_to_stop.push_back("sh_rfj3_position_controller");
   list_controllers_to_stop.push_back("sh_thj1_position_controller");
   list_controllers_to_stop.push_back("sh_thj2_position_controller");
 
@@ -436,24 +554,26 @@ int main(int argc, char **argv)
   }
   
   
+  
+  sleep(3.0);
+  
   // Enviar comandos de fuerza  -> Reajuste de fuerza
   // >> while presion menor que un umbral de seguridad
-    double max_pressure_threshold = 7.0;
-    int it = 1;
-    // Reajuste first - finger
-    do
+  double max_pressure_threshold = 5.0; // 1; //5.0;
+  int it = 1;
+  double effort = 600.0;  // -> máximo=900.0 
+  
+  
+  // Reajuste thumb - finger
+  do
+  {
+    if (pressure_client.call(srv_pressure))
     {
-      if (pressure_client.call(srv_pressure))
-      {
-	ROS_INFO("/Reajuste - fuerza - first finger");
-
-	    //eff_ff_j0_pub.publish(400.0);
-	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[1]) < 5.0) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[1] < max_pressure_threshold)
-	    {
-	      eff_ff_j3_pub.publish(900.0);
-	      eff_ff_j0_pub.publish(900.0);
+	  if((min_pressure_threshold < srv_pressure.response.applied_force[0]) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
+	  {
+	      eff_th_j5_pub.publish(effort);
+	      eff_th_j4_pub.publish(effort);
+	      ROS_INFO("/Reajuste - fuerza - thumb: %f", effort);
 	      
 	      myfile << srv_pressure.response.applied_force[0];
 	      myfile << " ";
@@ -461,117 +581,212 @@ int main(int argc, char **argv)
 	      myfile << " ";
 	      myfile << srv_pressure.response.applied_force[2];
 	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[3];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[4];
+	      myfile << " ";
 	      myfile << iteration;
 	      myfile << "\n";
 	      iteration++;
-	    }
-	    else	
+	  }
+	  else
 	      break;
-	    it++;
-	    sleep(1.5); 
-	
-      }
-      else
-      {
-	ROS_ERROR("Failed to call service pressure");
-	return 1;
-      }
+	  //it++;
+	  effort += 100.0;
+	  sleep(0.8); 
       
-    }while((srv_pressure.response.applied_force[1] <  max_pressure_threshold) && (it < 4));
-    
-    
-    // Reajuste thumb - finger
-    it = 1;
-    do
+    }
+    else
     {
-      if (pressure_client.call(srv_pressure))
-      {
-	ROS_INFO("/Reajuste - fuerza - thumb");
-
-	    //eff_ff_j0_pub.publish(400.0);
-	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[0]) < 5.0) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[0] < max_pressure_threshold)
-	    {
-		eff_th_j5_pub.publish(900.0);
-		eff_th_j4_pub.publish(900.0);
-		
-		myfile << srv_pressure.response.applied_force[0];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[1];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[2];
-		myfile << " ";
-		myfile << iteration;
-		myfile << "\n";
-		iteration++;
-	    }
-	    else
-		break;
-	    it++;
-	    sleep(0.8); 
-	
-      }
-      else
-      {
-	ROS_ERROR("Failed to call service pressure");
-	return 1;
-      }
-      
-    }while((srv_pressure.response.applied_force[0] <  max_pressure_threshold) && (it < 4));
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+    }
     
-    
-    
-    
-    
-    // Reajuste middle - finger
-    it = 1;
-    do
+  }while((srv_pressure.response.applied_force[0] <  max_pressure_threshold) && (effort <= 900.0)); //(it < 4));
+  
+  
+  // Reajuste first - finger
+  it = 1;
+  effort = 600.0;
+  do
+  {
+    if (pressure_client.call(srv_pressure))
     {
-      if (pressure_client.call(srv_pressure))
-      {
-	ROS_INFO("/Reajuste - fuerza - middle");
 
-	    //eff_ff_j0_pub.publish(400.0);
-	    //sleep(0.1);
-	    //if(((max_pressure_threshold - srv_pressure.response.applied_force[0]) < 5.0) && (srv_pressure.response.applied_force[0] < max_pressure_threshold))
-	    if(srv_pressure.response.applied_force[2] < max_pressure_threshold)
-	    {
-		eff_mf_j0_pub.publish(900.0);
-		eff_mf_j3_pub.publish(900.0);
-		
-		myfile << srv_pressure.response.applied_force[0];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[1];
-		myfile << " ";
-		myfile << srv_pressure.response.applied_force[2];
-		myfile << " ";
-		myfile << iteration;
-		myfile << "\n";
-		iteration++;
-	    }
-	    else
-		break;
-	    it++;
-	    sleep(0.8); 
-	
-      }
-      else
-      {
-	ROS_ERROR("Failed to call service pressure");
-	return 1;
-      }
+	  if((min_pressure_threshold < srv_pressure.response.applied_force[1]) && (srv_pressure.response.applied_force[1] < max_pressure_threshold))
+	  {
+	    eff_ff_j3_pub.publish(effort);
+	    eff_ff_j0_pub.publish(effort);
+	    ROS_INFO("/Reajuste - fuerza - first finger: %f", effort);
+	    
+	    myfile << srv_pressure.response.applied_force[0];
+	    myfile << " ";
+	    myfile << srv_pressure.response.applied_force[1];
+	    myfile << " ";
+	    myfile << srv_pressure.response.applied_force[2];
+	    myfile << " ";
+	    myfile << srv_pressure.response.applied_force[3];
+	    myfile << " ";
+	    myfile << srv_pressure.response.applied_force[4];
+	    myfile << " ";
+	    myfile << iteration;
+	    myfile << "\n";
+	    iteration++;
+	  }
+	  else	
+	    break;
+	  //it++;
+	  effort += 100.0;
+	  sleep(0.8); 
       
-    }while((srv_pressure.response.applied_force[2] <  max_pressure_threshold) && (it < 4));
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+  }
     
+  }while((srv_pressure.response.applied_force[1] <  max_pressure_threshold) && (effort <= 900.0)); // &&(it < 4));
     
-   myfile.close();
+        
+    
+  // Reajuste middle - finger
+  it = 1;
+  effort = 600.0;
+  do
+  {
+    if (pressure_client.call(srv_pressure))
+    {
 
+	  if((min_pressure_threshold < srv_pressure.response.applied_force[2]) && (srv_pressure.response.applied_force[2] < max_pressure_threshold))
+	  {
+	      eff_mf_j0_pub.publish(effort);
+	      eff_mf_j3_pub.publish(effort);
+	      ROS_INFO("/Reajuste - fuerza - middle finger: %f", effort);
+	      
+	      myfile << srv_pressure.response.applied_force[0];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[1];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[2];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[3];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[4];
+	      myfile << " ";
+	      myfile << iteration;
+	      myfile << "\n";
+	      iteration++;
+	  }
+	  else
+	      break;
+	  //it++;
+	  effort+=100.0;
+	  sleep(0.8); 
+      
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+    }
+    
+  }while((srv_pressure.response.applied_force[2] <  max_pressure_threshold) && (effort <= 900.0)); //&& (it < 4));
+  
+  
+  // Reajuste ring - finger
+  it = 1;
+  effort = 600.0;
+  do
+  {
+    if (pressure_client.call(srv_pressure))
+    {
+	  if((min_pressure_threshold < srv_pressure.response.applied_force[3]) && (srv_pressure.response.applied_force[3] < max_pressure_threshold))
+	  {
+	      eff_rf_j0_pub.publish(effort);
+	      eff_rf_j3_pub.publish(effort);
+	      ROS_INFO("/Reajuste - fuerza - ring finger: %f", effort);
+	      
+	      myfile << srv_pressure.response.applied_force[0];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[1];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[2];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[3];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[4];
+	      myfile << " ";
+	      myfile << iteration;
+	      myfile << "\n";
+	      iteration++;
+	  }
+	  else
+	      break;
+	  //it++;
+	  effort += 100.0;
+	  sleep(0.8); 
+      
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+    }
+    
+  }while((srv_pressure.response.applied_force[3] <  max_pressure_threshold) && (effort <= 900.0)); //&& (it < 4));
+  
+  
+  
+    
+  // Reajuste little - finger
+  it = 1;
+  effort = 600.0;
+  do
+  {
+    if (pressure_client.call(srv_pressure))
+    {
+	  if((min_pressure_threshold < srv_pressure.response.applied_force[4]) && (srv_pressure.response.applied_force[4] < max_pressure_threshold))
+	  {
+	      eff_lf_j0_pub.publish(effort);
+	      eff_lf_j3_pub.publish(effort);
+	      ROS_INFO("/Reajuste - fuerza - little finger: %f", effort);
+	      
+	      myfile << srv_pressure.response.applied_force[0];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[1];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[2];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[3];
+	      myfile << " ";
+	      myfile << srv_pressure.response.applied_force[4];
+	      myfile << " ";
+	      myfile << iteration;
+	      myfile << "\n";
+	      iteration++;
+	  }
+	  else
+	      break;
+	  //it++;
+	  effort += 100.0;
+	  sleep(0.8); 
+      
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service pressure");
+      return 1;
+    }
+    
+  }while((srv_pressure.response.applied_force[4] <  max_pressure_threshold) && (effort <= 900.0)); //&& (it < 4));
+  
     
     
-    
+  myfile.close();
+  
   // Desactivar controladores de fuerza. Restablecer controladores de posicion
-     // Switch controllers: parar controladores de posicion y arrancar controladores de fuerza
+  // Switch controllers: parar controladores de posicion y arrancar controladores de fuerza
 
   srv_switch.request.start_controllers = list_controllers_to_stop;
   srv_switch.request.stop_controllers = list_controllers_to_start;
@@ -589,7 +804,11 @@ int main(int argc, char **argv)
   // >> Finalizado algoritmo
   std::cout << "Algoritmo finalizado";
   std::cin.get();
- 
+  
+  }while(true);
+  /**
+   *  PRUEBA BUCLE
+   **/
   //ros::shutdown();  
   return 0;
 }
