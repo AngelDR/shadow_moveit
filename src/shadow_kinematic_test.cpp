@@ -152,7 +152,7 @@ int main(int argc, char **argv)
       kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
       for(std::size_t i=0; i < joint_names.size(); ++i)
       {
-	ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+	   ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
       }
       
       

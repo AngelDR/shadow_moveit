@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   // >> PARAMETROS DE LOS EXPERIMENTOS
   // >> Obtener numero de dedos que se usan en el experimento -> rosparam
   int num_fingers_exp;
-  if (node_handle.getParam("/experimento/numero_dedos", num_fingers_exp))
+  if (node_handle.getParam("/grasp_reconfigure/numero_dedos", num_fingers_exp))
   {
     ROS_INFO("Numero de dedos para el experimento : %d", num_fingers_exp); 
   }
@@ -181,7 +181,9 @@ int main(int argc, char **argv)
 
     
   // >> Situar wrist - hardcoded
-  pos_wr_j1_pub.publish(-0.5934);
+  // pos_wr_j1_pub.publish(-0.2034); // (en Javistruz)
+  // pos_wr_j1_pub.publish(-0.5934); // (en PA10)
+  pos_wr_j1_pub.publish(0.2094); // (con brazo horizontal)
   sleep(0.1);
   pos_wr_j2_pub.publish(-0.0174);
   sleep(0.1);
@@ -408,7 +410,18 @@ int main(int argc, char **argv)
    * 
    */
   // >> while presion menor que un umbral de seguridad
-  double min_pressure_threshold = 2.0;//0.3;//2.2;
+  // Threshold Min de presion
+  //double min_pressure_threshold = 2.0;//0.3;//2.2;
+  double min_pressure_threshold;
+  if (node_handle.getParam("/grasp_reconfigure/min_pressure_threshold", min_pressure_threshold))
+  {
+    ROS_INFO("Umbral minimo de presion : %f", min_pressure_threshold); 
+  }
+  else{
+    min_pressure_threshold = 2.0;
+  }
+
+
   ofstream myfile;
   myfile.open ("/home/aurova/Desktop/pruebas/resultados/pressure_data.txt");
   if(myfile.is_open())
@@ -466,7 +479,7 @@ int main(int argc, char **argv)
 	    //sleep(0.1);
 	  }
 	  pos_wr_j1_pub.publish(wrj1_position);
-	  sleep(0.2); 
+	  sleep(0.2); // sleep 0.2 
     }
     else
     {
@@ -559,7 +572,17 @@ int main(int argc, char **argv)
   
   // Enviar comandos de fuerza  -> Reajuste de fuerza
   // >> while presion menor que un umbral de seguridad
-  double max_pressure_threshold = 5.0; // 1; //5.0;
+  //double max_pressure_threshold = 5.0; // 1; //5.0;
+  double max_pressure_threshold;
+  if (node_handle.getParam("/grasp_reconfigure/max_pressure_threshold", max_pressure_threshold))
+  {
+    ROS_INFO("Umbral maximo de presion : %f", max_pressure_threshold); 
+  }
+  else{
+    max_pressure_threshold = 5.0;
+  }
+
+
   int it = 1;
   double effort = 600.0;  // -> máximo=900.0 
   
