@@ -310,36 +310,36 @@ int main(int argc, char **argv)
   // Definir callbacks para cada joint publicada
   switch(finger){
     case 1:
-        subs_Th_J1 = nh.subscribe("/sh_thj1_position_controller/state",1000, _j1Callback);
-	subs_Th_J2 = nh.subscribe("/sh_thj2_position_controller/state",1000, _j2Callback);
-	subs_Th_J3 = nh.subscribe("/sh_thj3_position_controller/state",1000, _j3Callback);
-	subs_Th_J4 = nh.subscribe("/sh_thj4_position_controller/state",1000, _j4Callback);
-	subs_Th_J5 = nh.subscribe("/sh_thj5_position_controller/state",1000, _j5Callback);
+          subs_Th_J1 = nh.subscribe("/sh_thj1_position_controller/state",1000, _j1Callback);
+	         subs_Th_J2 = nh.subscribe("/sh_thj2_position_controller/state",1000, _j2Callback);
+	         subs_Th_J3 = nh.subscribe("/sh_thj3_position_controller/state",1000, _j3Callback);
+	         subs_Th_J4 = nh.subscribe("/sh_thj4_position_controller/state",1000, _j4Callback);
+	         subs_Th_J5 = nh.subscribe("/sh_thj5_position_controller/state",1000, _j5Callback);
 	break;
 	
     case 2:
-	subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, _j0Callback);
-	subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, _j3Callback);
-	subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, _j4Callback);
+        	subs_Ff_J0 = nh.subscribe("/sh_ffj0_position_controller/state", 1000, _j0Callback);
+        	subs_Ff_J3 = nh.subscribe("/sh_ffj3_position_controller/state", 1000, _j3Callback);
+        	subs_Ff_J4 = nh.subscribe("/sh_ffj4_position_controller/state", 1000, _j4Callback);
 	break;
 	
     case 3:  
-	subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, _j0Callback);
-	subs_Mf_J3 = nh.subscribe("/sh_mfj3_position_controller/state", 1000, _j3Callback);
-	subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, _j4Callback);
+        	subs_Mf_J0 = nh.subscribe("/sh_mfj0_position_controller/state", 1000, _j0Callback);
+        	subs_Mf_J3 = nh.subscribe("/sh_mfj3_position_controller/state", 1000, _j3Callback);
+        	subs_Mf_J4 = nh.subscribe("/sh_mfj4_position_controller/state", 1000, _j4Callback);
 	break;
 	  
     case 4:
-	subs_Rf_J0 = nh.subscribe("/sh_rfj0_position_controller/state", 1000, _j0Callback);
-	subs_Rf_J3 = nh.subscribe("/sh_rfj3_position_controller/state", 1000, _j3Callback);
-	subs_Rf_J4 = nh.subscribe("/sh_rfj4_position_controller/state", 1000, _j4Callback);
+        	subs_Rf_J0 = nh.subscribe("/sh_rfj0_position_controller/state", 1000, _j0Callback);
+        	subs_Rf_J3 = nh.subscribe("/sh_rfj3_position_controller/state", 1000, _j3Callback);
+        	subs_Rf_J4 = nh.subscribe("/sh_rfj4_position_controller/state", 1000, _j4Callback);
 	break;
 	
     case 5:
-	subs_Lf_J0 = nh.subscribe("/sh_lfj0_position_controller/state", 1000, _j0Callback);
-	subs_Lf_J3 = nh.subscribe("/sh_lfj3_position_controller/state", 1000, _j3Callback);
-	subs_Lf_J4 = nh.subscribe("/sh_lfj4_position_controller/state", 1000, _j4Callback);
-	subs_Lf_J5 = nh.subscribe("/sh_lfj5_position_controller/state", 1000, _j5Callback);
+        	subs_Lf_J0 = nh.subscribe("/sh_lfj0_position_controller/state", 1000, _j0Callback);
+        	subs_Lf_J3 = nh.subscribe("/sh_lfj3_position_controller/state", 1000, _j3Callback);
+        	subs_Lf_J4 = nh.subscribe("/sh_lfj4_position_controller/state", 1000, _j4Callback);
+        	subs_Lf_J5 = nh.subscribe("/sh_lfj5_position_controller/state", 1000, _j5Callback);
 	break;
   }
 

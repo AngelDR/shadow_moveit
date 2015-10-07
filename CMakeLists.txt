@@ -11,15 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   pr2_controllers_msgs
 )
 
-find_package(catkin REQUIRED COMPONENTS moveit_core moveit_ros_planning moveit_ros_planning_interface pluginlib cmake_modules dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS moveit_core moveit_ros_planning moveit_ros_planning_interface pluginlib cmake_modules)
 
 find_package(Boost REQUIRED system filesystem date_time thread)
-
-#add dynamic reconfigure api
-generate_dynamic_reconfigure_options(
-  cfg/grasp_reconfigure.cfg
-  #...
-)
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -133,7 +127,6 @@ link_directories(${catkin_LIBRARY_DIRS})
 add_executable(shadow_kinematic_test src/shadow_kinematic_test.cpp)
 add_executable(shadow_get_ik src/get_ik.cpp)
 add_executable(shadow_move_group_test src/move_group_test.cpp)
-add_executable(grasp_reconfigure src/grasp_reconfigure.cpp)
 add_executable(shadow_slip_move_group_test src/slip_move_group_test.cpp)
 #add_executable(shadow_record_test src/record.cpp)
 
@@ -141,7 +134,6 @@ target_link_libraries(shadow_kinematic_test ${catkin_LIBRARIES} ${Boost_LIBRARIE
 target_link_libraries(shadow_get_ik ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(shadow_slip_move_group_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(grasp_reconfigure ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #target_link_libraries(shadow_record_test ${catkin_LIBRARIES})
 
@@ -195,7 +187,6 @@ install(TARGETS shadow_kinematic_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATI
 install(TARGETS shadow_get_ik DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(TARGETS shadow_slip_move_group_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-install(TARGETS grasp_reconfigure DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 #install(TARGETS shadow_record_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
