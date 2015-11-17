@@ -312,15 +312,21 @@ int main(int argc, char **argv)
     
     // >> SITUAR THUMB
     std::vector<double> group_variable_values_thumb;
-    group_variable_values_thumb.push_back(0.802);
-    /**if(num_fingers_exp==2)
-      group_variable_values_thumb.push_back(0.855);  
+    group_variable_values_thumb.push_back(1.047);
+    if(num_fingers_exp==2)
+      group_variable_values_thumb.push_back(0.698);  
     if(num_fingers_exp==3)
-      group_variable_values_thumb.push_back(1.22);  // para 3 dedos*/
-    group_variable_values_thumb.push_back(1.22);
-    group_variable_values_thumb.push_back(0.157);
+      group_variable_values_thumb.push_back(0.798);  // para 3 dedos*/
+    if(num_fingers_exp==4)
+      group_variable_values_thumb.push_back(0.998);
+    if(num_fingers_exp==5)
+      group_variable_values_thumb.push_back(1.198);
+    //group_variable_values_thumb.push_back(0.698);
+
+
+    group_variable_values_thumb.push_back(0.26);
     group_variable_values_thumb.push_back(-0.698);
-    group_variable_values_thumb.push_back(0.261);  
+    group_variable_values_thumb.push_back(0.0);  
     /**if(num_fingers_exp==4)
       group_variable_values_thumb.push_back(1.047);*/
     
@@ -418,9 +424,12 @@ int main(int argc, char **argv)
       group_variable_values_lf[2] += position_step;
   	  group_variable_values_lf[3] += position_step_tip;
       group_variable_values_thumb[4] += thumb_step;
+      group_variable_values_thumb[3] += thumb_step;
+
   	  wrj1_position += wrist_step;//experimento -0.002;  // original -0.01
 
       pos_th_j1_pub.publish(group_variable_values_thumb[4]);
+      pos_th_j2_pub.publish(group_variable_values_thumb[3]);
   	  pos_ff_j0_pub.publish(group_variable_values_ff[2]);
   	  pos_ff_j3_pub.publish(group_variable_values_ff[1]);
   	  if (num_fingers_exp > 2)
